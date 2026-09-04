@@ -8,43 +8,26 @@ jobs:
     runs-on: windows-2022
 
     steps:
-      - name: Checkout this repo
+      - name: Checkout our files
         uses: actions/checkout@v4
 
-      - name: Checkout exact UEVR source
+      - name: Checkout UEVR headers only
         uses: actions/checkout@v4
         with:
           repository: praydog/UEVR
           ref: 4ee5c6b6162dee2291fc75f9dfc57667f6d45a2d
           path: UEVR
-          submodules: recursive
+          submodules: false
           fetch-depth: 1
 
-      - name: Put Ship Explorer fix into UEVR example plugin target
-        shell: pwsh
+      - name: Build Ship Explorer DLL
+        shell: cmd
         run: |
-          Copy-Item -Force "${{ github.workspace }}\Plugin.cpp" "${{ github.workspace }}\UEVR\examples\example_plugin\Plugin.cpp"
-
-      - name: Configure
-        shell: pwsh
-        run: |
-          cmake -S "${{ github.workspace }}\UEVR" -B "${{ github.workspace }}\build" -A x64
-
-      - name: Build DLL
-        shell: pwsh
-        run: |
-          cmake --build "${{ github.workspace }}\build" --config Release --target example_plugin
-
-      - name: Collect DLL
-        shell: pwsh
-        run: |
-          $dll = Get-ChildItem "${{ github.workspace }}\build" -Recurse -Filter "example_plugin.dll" | Select-Object -First 1
-          if (-not $dll) { throw "example_plugin.dll was not produced" }
-          New-Item -ItemType Directory -Force "${{ github.workspace }}\artifact" | Out-Null
-          Copy-Item $dll.FullName "${{ github.workspace }}\artifact\ShipExplorerStereoFix.dll"
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvars64.bat"
+          cl /nologo /std:c++latest /EHsc /LD /I"%GITHUB_WORKSPACE%\UEVR\include" "%GITHUB_WORKSPACE%\Plugin.cpp" /Fe:"%GITHUB_WORKSPACE%\ShipExplorerStereoFix.dll"
 
       - name: Upload finished DLL
         uses: actions/upload-artifact@v4
         with:
           name: ShipExplorerStereoFix
-          path: artifact/ShipExplorerStereoFix.dll
+          path: ShipExplorerStereoFix.dll
