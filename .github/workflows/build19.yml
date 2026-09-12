@@ -117,11 +117,7 @@ jobs:
             [Convert]::FromBase64String($clean)
           )
 
-          $hash = (
-            Get-FileHash
-            "$env:GITHUB_WORKSPACE\ShipExplorerSceneViewChainProbeV19.cpp"
-            -Algorithm SHA256
-          ).Hash.ToLower()
+          $hash = (Get-FileHash "$env:GITHUB_WORKSPACE\ShipExplorerSceneViewChainProbeV19.cpp" -Algorithm SHA256).Hash.ToLower()
 
           Write-Host "V19 source SHA256: $hash"
 
